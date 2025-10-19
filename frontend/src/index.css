@@ -1,0 +1,591 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 260 30% 6%;
+    --foreground: 260 20% 98%;
+
+    --card: 260 25% 10%;
+    --card-foreground: 260 20% 98%;
+
+    --popover: 260 25% 10%;
+    --popover-foreground: 260 20% 98%;
+
+    --primary: 250 70% 64%;
+    --primary-foreground: 260 10% 98%;
+
+    --secondary: 260 15% 20%;
+    --secondary-foreground: 260 10% 90%;
+
+    --muted: 260 15% 18%;
+    --muted-foreground: 260 10% 60%;
+
+    --accent: 290 75% 64%;
+    --accent-foreground: 260 10% 98%;
+
+    --destructive: 360 70% 50%;
+    --destructive-foreground: 260 10% 98%;
+
+    --border: 260 15% 20%;
+    --input: 260 15% 20%;
+    --ring: 260 70% 64%;
+    
+    --radius: 0.75rem;
+
+    --sidebar-background: 260 30% 8%;
+    --sidebar-foreground: 260 10% 90%;
+    --sidebar-primary: 250 70% 64%;
+    --sidebar-primary-foreground: 260 10% 98%;
+    --sidebar-accent: 260 15% 15%;
+    --sidebar-accent-foreground: 260 10% 90%;
+    --sidebar-border: 260 15% 15%;
+    --sidebar-ring: 250 70% 64%;
+
+    /* Enhanced Nebula Colors */
+    --nebula-50: 250 100% 98%;
+    --nebula-100: 250 95% 95%;
+    --nebula-200: 250 90% 90%;
+    --nebula-300: 250 85% 85%;
+    --nebula-400: 250 80% 80%;
+    --nebula-500: 250 75% 75%;
+    --nebula-600: 250 70% 70%;
+    --nebula-700: 250 65% 65%;
+    --nebula-800: 250 60% 60%;
+    --nebula-900: 250 55% 55%;
+    --nebula-950: 250 50% 50%;
+
+    /* Glow Effects */
+    --nebula-glow: 250 70% 64%;
+    --nebula-glow-soft: 250 70% 64% / 0.3;
+    --nebula-glow-medium: 250 70% 64% / 0.5;
+    --nebula-glow-strong: 250 70% 64% / 0.8;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 260 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 260 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 10% 10%;
+
+    --primary: 250 70% 64%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 15% 95%;
+    --secondary-foreground: 260 10% 30%;
+
+    --muted: 260 15% 95%;
+    --muted-foreground: 260 10% 40%;
+
+    --accent: 290 75% 64%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 360 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 15% 90%;
+    --input: 260 15% 90%;
+    --ring: 260 70% 64%;
+
+    --sidebar-background: 260 30% 98%;
+    --sidebar-foreground: 260 10% 30%;
+    --sidebar-primary: 250 70% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 260 15% 95%;
+    --sidebar-accent-foreground: 260 10% 30%;
+    --sidebar-border: 260 15% 90%;
+    --sidebar-ring: 250 70% 64%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(102, 97, 230, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+      linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    min-height: 100vh;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  .light body {
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(102, 97, 230, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.02) 0%, transparent 50%),
+      linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
+  }
+
+  /* Enhanced scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+
+  /* Custom star animations */
+  .star {
+    @apply absolute rounded-full;
+    animation: star-twinkle 3s ease-in-out infinite;
+    filter: blur(0.5px);
+  }
+
+  /* Selection styling */
+  ::selection {
+    background: hsl(var(--primary) / 0.3);
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Enhanced Card Component */
+  .nebula-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl;
+    background: linear-gradient(135deg, 
+      hsl(var(--card) / 0.8) 0%, 
+      hsl(var(--card) / 0.6) 100%);
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nebula-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 10px 25px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+      0 0 20px rgba(102, 97, 230, 0.1);
+  }
+
+  /* Enhanced Button Component */
+  .nebula-button {
+    @apply bg-nebula-600 hover:bg-nebula-700 text-white font-medium rounded-lg px-5 py-2.5 transition-all duration-300 ease-out;
+    background: linear-gradient(135deg, 
+      hsl(var(--nebula-600)) 0%, 
+      hsl(var(--nebula-500)) 100%);
+    box-shadow: 
+      0 4px 6px -1px rgba(102, 97, 230, 0.2),
+      0 2px 4px -1px rgba(102, 97, 230, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nebula-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .nebula-button:hover::before {
+    left: 100%;
+  }
+
+  .nebula-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 8px 15px -3px rgba(102, 97, 230, 0.3),
+      0 4px 6px -2px rgba(102, 97, 230, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+
+  .nebula-button:active {
+    transform: translateY(0);
+  }
+
+  /* Enhanced Input Component */
+  .nebula-input {
+    @apply bg-secondary/50 border border-border/50 text-foreground placeholder:text-muted-foreground rounded-lg p-2.5 transition-all duration-200;
+    background: linear-gradient(135deg, 
+      hsl(var(--secondary) / 0.3) 0%, 
+      hsl(var(--secondary) / 0.1) 100%);
+    backdrop-filter: blur(10px);
+    box-shadow: 
+      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+
+  .nebula-input:focus {
+    @apply ring-2 ring-nebula-500 border-nebula-500;
+    box-shadow: 
+      0 0 0 3px rgba(102, 97, 230, 0.1),
+      0 0 0 1px rgba(102, 97, 230, 0.2) inset;
+    transform: translateY(-1px);
+  }
+
+  .nebula-input:hover {
+    border-color: hsl(var(--border) / 0.8);
+    box-shadow: 
+      0 2px 4px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  }
+
+  /* Enhanced Label Component */
+  .nebula-label {
+    @apply block text-sm font-medium text-foreground/90 mb-2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Enhanced Badge Component */
+  .nebula-badge {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .badge-complete {
+    @apply bg-emerald-500/20 text-emerald-300 border border-emerald-500/30;
+    background: linear-gradient(135deg, 
+      rgba(16, 185, 129, 0.2) 0%, 
+      rgba(16, 185, 129, 0.1) 100%);
+    box-shadow: 
+      0 2px 4px rgba(16, 185, 129, 0.2),
+      0 0 0 1px rgba(16, 185, 129, 0.1) inset;
+  }
+
+  .badge-incomplete {
+    @apply bg-amber-500/20 text-amber-300 border border-amber-500/30;
+    background: linear-gradient(135deg, 
+      rgba(245, 158, 11, 0.2) 0%, 
+      rgba(245, 158, 11, 0.1) 100%);
+    box-shadow: 
+      0 2px 4px rgba(245, 158, 11, 0.2),
+      0 0 0 1px rgba(245, 158, 11, 0.1) inset;
+  }
+
+  /* Enhanced Container */
+  .stars-container {
+    @apply fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1];
+    background: radial-gradient(ellipse at center, 
+      rgba(102, 97, 230, 0.03) 0%, 
+      transparent 70%);
+  }
+
+  /* Glass Morphism Effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    background: linear-gradient(135deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Floating Animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Pulse Glow */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+}
+
+/* Enhanced Animations */
+@keyframes nebula-flow {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) scale(1);
+    opacity: 0.6;
+  }
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(var(--orbit-distance)) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(var(--orbit-distance)) rotate(-360deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px) rotate(0deg); 
+  }
+  25% { 
+    transform: translateY(-10px) translateX(10px) rotate(1deg); 
+  }
+  50% { 
+    transform: translateY(-5px) translateX(20px) rotate(0deg); 
+  }
+  75% { 
+    transform: translateY(10px) translateX(10px) rotate(-1deg); 
+  }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: scale(0.8) rotate(0deg); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2) rotate(180deg); 
+  }
+}
+
+@keyframes star-twinkle-slow {
+  0% { 
+    opacity: 0.5; 
+    transform: scale(1) rotate(0deg); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.3) rotate(90deg); 
+  }
+  100% { 
+    opacity: 0.5; 
+    transform: scale(1) rotate(180deg); 
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.05); 
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(102, 97, 230, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(102, 97, 230, 0.6);
+  }
+}
+
+@keyframes spin-very-slow {
+  0% { 
+    transform: translate(-50%, -50%) rotate(0deg); 
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotate(360deg); 
+  }
+}
+
+@keyframes spin-reverse-very-slow {
+  0% { 
+    transform: translate(-50%, -50%) rotate(0deg); 
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotate(-360deg); 
+  }
+}
+
+@keyframes comet {
+  0% { 
+    transform: translateX(-100px) rotate(5deg); 
+    opacity: 0;
+  }
+  20% { 
+    opacity: 0.8;
+  }
+  40% { 
+    opacity: 0.2;
+  }
+  60% { 
+    opacity: 0;
+  }
+  100% { 
+    transform: translateX(calc(100vw + 100px)) rotate(5deg); 
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Animation Classes */
+.animate-star-twinkle {
+  animation: star-twinkle 1.5s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.animate-star-twinkle-slow {
+  animation: star-twinkle-slow 4s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+.animate-nebula-flow {
+  animation: nebula-flow 30s linear infinite;
+}
+
+.animate-spin-very-slow {
+  animation: spin-very-slow 120s linear infinite;
+}
+
+.animate-spin-reverse-very-slow {
+  animation: spin-reverse-very-slow 180s linear infinite;
+}
+
+.animate-comet {
+  animation: comet 8s ease-out infinite;
+}
+
+.animate-float {
+  animation: float 15s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.1), 
+    transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}
+
+.bg-gradient-nebula {
+  background: linear-gradient(135deg, 
+    hsl(var(--nebula-600)) 0%, 
+    hsl(var(--nebula-500)) 50%, 
+    hsl(var(--accent)) 100%);
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(102, 97, 230, 0.3);
+}
+
+/* Add support for light theme */
+.light .star {
+  opacity: 0.6;
+}
+
+.light .nebula-card {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.9) 0%, 
+    rgba(255, 255, 255, 0.7) 100%);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.05) inset;
+}
+
+.light .nebula-button {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)) 0%, 
+    hsl(var(--accent)) 100%);
+  box-shadow: 
+    0 4px 6px -1px rgba(102, 97, 230, 0.2),
+    0 2px 4px -1px rgba(102, 97, 230, 0.1);
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+  .nebula-card {
+    @apply rounded-lg;
+  }
+  
+  .nebula-button {
+    @apply px-4 py-2 text-sm;
+  }
+}
+
+/* Loading states */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 1.5s infinite;
+}

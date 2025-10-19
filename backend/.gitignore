@@ -1,0 +1,13 @@
+
+# dependencies
+/node_modules
+
+# environment variables
+.env
+
+# uploads directory
+/uploads/*
+!/uploads/.gitkeep
+
+# logs
+*.log
