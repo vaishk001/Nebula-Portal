@@ -6,6 +6,8 @@ import DashboardLayout from '../components/layout/DashboardLayout';
 import DashboardStats from '../components/dashboard/DashboardStats';
 import RecentTasks from '../components/dashboard/RecentTasks';
 import UserList from '../components/dashboard/UserList';
+import ManagerReview from '../components/dashboard/ManagerReview';
+import PendingManagers from '../components/dashboard/PendingManagers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
 import { Task } from '../types';
@@ -125,7 +127,11 @@ const Dashboard = () => {
   if (!userData) return null;
   
   const isAdmin = userData.role === 'admin';
+  const isManager = userData.role === 'manager';
   const greeting = getGreeting();
+  
+  console.log('Dashboard - User data:', userData);
+  console.log('Dashboard - isAdmin:', isAdmin, 'isManager:', isManager);
 
   function getGreeting() {
     const hour = currentTime.getHours();
@@ -146,7 +152,7 @@ const Dashboard = () => {
               </div>
             </div>
             <p className="text-muted-foreground mt-1">
-              Here's an overview of your {isAdmin ? 'team\'s' : 'assigned'} tasks and recent activity.
+              Here's an overview of your {isAdmin ? 'team\'s' : isManager ? 'review' : 'assigned'} tasks and recent activity.
             </p>
           </div>
           <div className="hidden md:flex items-center gap-3">
@@ -158,6 +164,13 @@ const Dashboard = () => {
         </div>
         
         <DashboardStats isAdmin={isAdmin} currentUserId={userData.id} />
+        
+        {/* Manager Review Panel */}
+        {isManager && (
+          <div className="mb-6">
+            <ManagerReview managerId={userData.id} managerName={userData.name} />
+          </div>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
@@ -221,15 +234,18 @@ const Dashboard = () => {
           
           <div className="space-y-6">
             {isAdmin && (
-              <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl">Users</CardTitle>
-                  <CardDescription>Manage your team members</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <UserList />
-                </CardContent>
-              </Card>
+              <>
+                <PendingManagers />
+                <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl">Users</CardTitle>
+                    <CardDescription>Manage your team members</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <UserList />
+                  </CardContent>
+                </Card>
+              </>
             )}
             
             <Card className="border-border/30 bg-card/60 backdrop-blur-sm">
@@ -271,7 +287,7 @@ const Dashboard = () => {
                       <span id="completion-percentage">0%</span>
                     </div>
                     <div className="overflow-hidden h-2 text-xs flex rounded bg-secondary/50">
-                      <div id="completion-bar" style={{ width: "0%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-nebula-500"></div>
+                      <div id="completion-bar" className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-nebula-500 transition-all duration-300"></div>
                     </div>
                   </div>
                 </div>
@@ -311,7 +327,8 @@ const Dashboard = () => {
                           document.getElementById('overdue-count').textContent = overdue;
                         }
                         document.getElementById('completion-percentage').textContent = completionPercentage + '%';
-                        document.getElementById('completion-bar').style.width = completionPercentage + '%';
+                        const completionBar = document.getElementById('completion-bar');
+                        completionBar.style.width = completionPercentage + '%';
                       } catch (e) {
                         console.error("Error updating task counts:", e);
                       }

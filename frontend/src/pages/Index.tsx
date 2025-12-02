@@ -5,15 +5,18 @@ import AuthForm from '../components/auth/AuthForm';
 import StarBackground from '../components/StarBackground';
 import ThemeToggle from '../components/ThemeToggle';
 import { Rocket, Globe, Satellite, Zap } from 'lucide-react';
+import { checkExistingSession } from '../utils/sso';
 
 const Index = () => {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in (regular or SSO)
     const storedUser = localStorage.getItem('nebulaUser');
-    if (storedUser) {
+    const ssoUser = checkExistingSession();
+    
+    if (storedUser || ssoUser) {
       // Redirect to dashboard
       navigate('/dashboard');
     }

@@ -4,6 +4,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '../../hooks/use-toast';
 import { User } from '../../types';
+import { getUsers, createTask } from '../../utils/api';
 
 const TaskForm = () => {
   const [formData, setFormData] = useState({
@@ -19,18 +20,19 @@ const TaskForm = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load users from localStorage
-    const storedUsers = localStorage.getItem('nebulaUsers');
-    if (storedUsers) {
+    // Load users from MongoDB
+    const loadUsers = async () => {
       try {
-        const parsedUsers = JSON.parse(storedUsers);
+        const allUsers = await getUsers();
         // Filter to only show regular users, not admins
-        const regularUsers = parsedUsers.filter((user: User) => user.role === 'user');
+        const regularUsers = allUsers.filter((user: User) => user.role === 'user');
         setUsers(regularUsers);
-      } catch (e) {
-        console.error("Error parsing users:", e);
+      } catch (error) {
+        console.error("Error loading users:", error);
+        toast({ title: "Error", description: "Failed to load users", variant: "destructive" });
       }
-    }
+    };
+    loadUsers();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -43,7 +45,7 @@ const TaskForm = () => {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
@@ -56,64 +58,71 @@ const TaskForm = () => {
       return;
     }
 
-    // Generate unique ID for task
-    const taskId = `task_${Date.now()}`;
-    const createdAt = new Date().toISOString();
+    try {
+      const createdAt = new Date().toISOString();
+      const deadlineISO = new Date(formData.deadline).toISOString();
 
-    // Handle task creation
-    const newTasks = [];
-    
-    // Get existing tasks
-    const existingTasksJson = localStorage.getItem('nebulaTasks');
-    const existingTasks = existingTasksJson ? JSON.parse(existingTasksJson) : [];
-    
-    if (formData.assignToAll) {
-      // Create a task for each user
-      for (const user of users) {
-        newTasks.push({
-          id: `${taskId}_${user.id}`,
+      // Handle task creation
+      const newTasks = [];
+      
+      if (formData.assignToAll) {
+        // Create a task for each user
+        for (const user of users) {
+          const taskData = {
+            id: `task-${Date.now()}-${user.id}`,
+            title: formData.title,
+            description: formData.description,
+            longDescription: formData.longDescription,
+            assignedTo: user.id,
+            status: 'incomplete' as const,
+            deadline: deadlineISO,
+            createdAt,
+            reviewStatus: 'pending_review' as const
+          };
+          await createTask(taskData);
+          newTasks.push(taskData);
+        }
+      } else {
+        // Create a task for the selected user only
+        const taskData = {
+          id: `task-${Date.now()}`,
           title: formData.title,
           description: formData.description,
           longDescription: formData.longDescription,
-          assignedTo: user.id,
-          status: 'incomplete',
-          deadline: new Date(formData.deadline).toISOString(),
-          createdAt
-        });
+          assignedTo: formData.assignedTo,
+          status: 'incomplete' as const,
+          deadline: deadlineISO,
+          createdAt,
+          reviewStatus: 'pending_review' as const
+        };
+        await createTask(taskData);
+        newTasks.push(taskData);
       }
-    } else {
-      // Create a task for the selected user only
-      newTasks.push({
-        id: taskId,
-        title: formData.title,
-        description: formData.description,
-        longDescription: formData.longDescription,
-        assignedTo: formData.assignedTo,
-        status: 'incomplete',
-        deadline: new Date(formData.deadline).toISOString(),
-        createdAt
+      
+      toast({
+        title: "Task Created",
+        description: formData.assignToAll 
+          ? `Task assigned to all users (${users.length})` 
+          : "The task has been created successfully"
+      });
+      
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        longDescription: '',
+        assignedTo: '',
+        assignToAll: false,
+        deadline: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+      });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create task",
+        variant: "destructive"
       });
     }
-    
-    // Save to localStorage
-    localStorage.setItem('nebulaTasks', JSON.stringify([...existingTasks, ...newTasks]));
-    
-    toast({
-      title: "Task Created",
-      description: formData.assignToAll 
-        ? `Task assigned to all users (${users.length})` 
-        : "The task has been created successfully"
-    });
-    
-    // Reset form
-    setFormData({
-      title: '',
-      description: '',
-      longDescription: '',
-      assignedTo: '',
-      assignToAll: false,
-      deadline: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-    });
   };
 
   return (

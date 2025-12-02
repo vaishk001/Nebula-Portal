@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Calendar, Clock, Edit, MoreHorizontal, Trash } from 'lucide-react';
+import { Calendar, Clock, Edit, MoreHorizontal, Trash, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task } from '../../types';
 import { useToast } from '../../hooks/use-toast';
+import { Badge } from '../ui/badge';
 
 interface TaskItemProps {
   task: Task;
@@ -18,7 +19,18 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
   const [editedTask, setEditedTask] = useState({ ...task });
   const { toast } = useToast();
   
-  const formattedDeadline = format(new Date(task.deadline), 'MMM dd, yyyy');
+  // Safely format deadline, handle invalid dates
+  const formattedDeadline = React.useMemo(() => {
+    try {
+      if (!task.deadline) return 'No deadline';
+      const date = new Date(task.deadline);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return format(date, 'MMM dd, yyyy');
+    } catch (error) {
+      console.error('Error formatting deadline:', error);
+      return 'Invalid date';
+    }
+  }, [task.deadline]);
   
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -102,8 +114,7 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
   
   return (
     <div 
-      className="nebula-card overflow-hidden transition-all duration-200"
-      style={{ maxHeight: isExpanded ? '1000px' : '180px' }}
+      className={`nebula-card overflow-hidden transition-all duration-200 ${isExpanded ? 'task-item-expanded' : 'task-item-collapsed'}`}
     >
       {isEditing ? (
         <div className="p-5">
@@ -111,34 +122,47 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
           
           <div className="space-y-4">
             <div>
-              <label className="nebula-label">Title</label>
+              <label htmlFor="task-title" className="nebula-label">Title</label>
               <input
+                id="task-title"
                 type="text"
                 name="title"
                 value={editedTask.title}
                 onChange={handleEditChange}
                 className="nebula-input w-full"
+                placeholder="Enter task title"
+                title="Task title"
+                required
+                aria-required="true"
               />
             </div>
             
             <div>
-              <label className="nebula-label">Description</label>
+              <label htmlFor="task-description" className="nebula-label">Description</label>
               <input
+                id="task-description"
                 type="text"
                 name="description"
                 value={editedTask.description}
                 onChange={handleEditChange}
                 className="nebula-input w-full"
+                placeholder="Enter a brief description"
+                title="Task description"
+                required
+                aria-required="true"
               />
             </div>
             
             <div>
-              <label className="nebula-label">Detailed Description</label>
+              <label htmlFor="task-longDescription" className="nebula-label">Detailed Description</label>
               <textarea
+                id="task-longDescription"
                 name="longDescription"
                 value={editedTask.longDescription}
                 onChange={handleEditChange}
                 className="nebula-input w-full min-h-[100px]"
+                placeholder="Add more detailed information"
+                title="Detailed task description"
               />
             </div>
             
@@ -162,11 +186,29 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
         <>
           <div className="p-5">
             <div className="flex justify-between mb-3">
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <h3 className="text-lg font-semibold">{task.title}</h3>
-                <div className={`ml-3 nebula-badge ${task.status === 'complete' ? 'badge-complete' : 'badge-incomplete'}`}>
+                <div className={`ml-1 nebula-badge ${task.status === 'complete' ? 'badge-complete' : 'badge-incomplete'}`}>
                   {task.status === 'complete' ? 'Completed' : 'Incomplete'}
                 </div>
+                {task.reviewStatus === 'reverted' && (
+                  <Badge className="bg-red-500/20 text-red-500 border-red-500/30">
+                    <AlertCircle size={12} className="mr-1" />
+                    Reverted
+                  </Badge>
+                )}
+                {task.reviewStatus === 'approved' && (
+                  <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
+                    <CheckCircle2 size={12} className="mr-1" />
+                    Approved
+                  </Badge>
+                )}
+                {task.status === 'complete' && task.reviewStatus === 'pending_review' && (
+                  <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30">
+                    <Clock size={12} className="mr-1" />
+                    Pending Review
+                  </Badge>
+                )}
               </div>
               
               <div className="flex items-center gap-2">
@@ -215,6 +257,16 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
                 <h4 className="font-medium mb-2">Detailed Description:</h4>
                 <p className="text-muted-foreground">{task.longDescription || 'No detailed description provided.'}</p>
                 
+                {task.reviewStatus === 'reverted' && task.reviewComment && (
+                  <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <h5 className="font-medium text-red-500 mb-1 flex items-center gap-2">
+                      <AlertCircle size={16} />
+                      Manager Feedback
+                    </h5>
+                    <p className="text-sm text-muted-foreground">{task.reviewComment}</p>
+                  </div>
+                )}
+                
                 {!isAdmin && (
                   <div className="mt-4">
                     <label className="nebula-label">Update Status:</label>
@@ -222,10 +274,14 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
                       className="nebula-input w-full max-w-xs"
                       value={task.status}
                       onChange={(e) => onStatusChange(task.id, e.target.value as 'complete' | 'incomplete')}
+                      aria-label="Task status"
                     >
                       <option value="incomplete">Incomplete</option>
                       <option value="complete">Complete</option>
                     </select>
+                    {task.status === 'incomplete' && task.reviewStatus === 'reverted' && (
+                      <p className="text-xs text-amber-500 mt-2">Task was reverted by manager. Please review feedback and resubmit.</p>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,24 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, Mail } from 'lucide-react';
+import { User as UserIcon, Mail, Shield } from 'lucide-react';
 import { User } from '../../types';
+import { Badge } from '../ui/badge';
+import { getUsers } from '../../utils/api';
 
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    // Load users from localStorage
-    const storedUsers = localStorage.getItem('nebulaUsers');
-    if (storedUsers) {
+    // Load users from MongoDB
+    const loadUsers = async () => {
       try {
-        // Only show regular users, not admins
-        const parsedUsers = JSON.parse(storedUsers);
-        const regularUsers = parsedUsers.filter((user: User) => user.role === 'user');
+        const allUsers = await getUsers();
+        // Show regular users and approved managers, not admins
+        const regularUsers = allUsers.filter((user: User) => 
+          (user.role === 'user') || (user.role === 'manager' && user.isApproved)
+        );
         setUsers(regularUsers);
-      } catch (e) {
-        console.error("Error parsing users:", e);
+      } catch (error) {
+        console.error("Error loading users:", error);
       }
-    }
+    };
+    loadUsers();
   }, []);
 
   if (users.length === 0) {
@@ -35,10 +39,17 @@ const UserList = () => {
       {users.map(user => (
         <div key={user.id} className="flex items-center p-3 rounded-md bg-secondary/20 hover:bg-secondary/40 transition-colors">
           <div className="w-8 h-8 bg-nebula-600/20 text-nebula-500 rounded-full flex items-center justify-center mr-3">
-            <UserIcon size={16} />
+            {user.role === 'manager' ? <Shield size={16} /> : <UserIcon size={16} />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{user.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium truncate">{user.name}</p>
+              {user.role === 'manager' && (
+                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
+                  Manager
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center text-xs text-muted-foreground mt-0.5">
               <Mail size={12} className="mr-1" />
               <span className="truncate">{user.email}</span>

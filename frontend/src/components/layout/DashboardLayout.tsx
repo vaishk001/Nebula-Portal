@@ -22,6 +22,7 @@ import {
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "../ui/dialog";
 import UserProfile from '../dashboard/UserProfile';
 import { User } from '../../types';
+import { handleSSOLogout } from '../../utils/sso';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -66,7 +67,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('nebulaUser');
+    handleSSOLogout(); // This clears both SSO session and nebulaUser
     navigate('/');
   };
 
@@ -298,6 +299,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   setShowProfile(true);
                 }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/80 group transition-all"
+                title="View Profile"
               >
                 <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-nebula-600/10 group-hover:bg-sidebar-accent/20 transition-all">
                   <UserIcon size={18} className="text-nebula-400" />

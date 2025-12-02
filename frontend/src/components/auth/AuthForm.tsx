@@ -4,24 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Eye, EyeOff, LogIn, UserPlus, Star, Sparkles, Shield, Lock } from 'lucide-react';
 import NebulaBranding from '../NebulaBranding';
+import SSOButtons from './SSOButtons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-
-// Updated to store new users during session
-const MOCK_USERS = [
-  { id: '1', email: 'admin@nebula.com', password: 'admin123', role: 'admin', name: 'Admin User' },
-  { id: '2', email: 'user@nebula.com', password: 'user123', role: 'user', name: 'Regular User' }
-];
-
-// Function to get the stored users or default to MOCK_USERS if none exist
-const getStoredUsers = () => {
-  const storedUsers = localStorage.getItem('nebulaUsers');
-  return storedUsers ? JSON.parse(storedUsers) : MOCK_USERS;
-};
-
-// Function to save users to localStorage
-const saveUsers = (users: any[]) => {
-  localStorage.setItem('nebulaUsers', JSON.stringify(users));
-};
+import { getUsers, createUser, login } from '../../utils/api';
+import { User } from '../../types';
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,14 +20,24 @@ const AuthForm = () => {
     role: 'user', // Default role
   });
   const [floating, setFloating] = useState(false);
-  const [users, setUsers] = useState(() => getStoredUsers());
+  const [users, setUsers] = useState<User[]>([]);
   
   const navigate = useNavigate();
 
-  // Save users to localStorage whenever they change
+  // Load users from MongoDB on component mount
   useEffect(() => {
-    saveUsers(users);
-  }, [users]);
+    const loadUsers = async () => {
+      try {
+        const usersFromDB = await getUsers();
+        console.log('Loaded users from MongoDB:', usersFromDB);
+        setUsers(usersFromDB);
+      } catch (error) {
+        console.error('Error loading users:', error);
+        toast.error('Failed to load users from database');
+      }
+    };
+    loadUsers();
+  }, []);
 
   // Generate some floating stars in the background
   useEffect(() => {
@@ -64,10 +60,13 @@ const AuthForm = () => {
     
     try {
       if (isLogin) {
-        // Login logic
-        const user = users.find(u => u.email === formData.email && u.password === formData.password);
+        // Login logic - use API endpoint with password verification
+        console.log('Login attempt for:', formData.email);
         
-        if (user) {
+        try {
+          const user = await login(formData.email, formData.password);
+          console.log('Login successful:', user);
+          
           // Store user data in localStorage
           localStorage.setItem('nebulaUser', JSON.stringify({
             id: user.id,
@@ -78,8 +77,9 @@ const AuthForm = () => {
           
           toast.success(`Welcome back, ${user.name}!`);
           setTimeout(() => navigate('/dashboard'), 1000);
-        } else {
-          toast.error('Invalid email or password');
+        } catch (error: any) {
+          // Error is already handled by API utility with toast
+          console.error('Login failed:', error);
         }
       } else {
         // Register logic
@@ -100,26 +100,39 @@ const AuthForm = () => {
           toast.error('Password must be at least 6 characters long');
           return;
         }
-        
-        // Check if email is already taken
-        if (users.some(user => user.email === formData.email)) {
-          toast.error('Email already in use');
+
+        // Check if user already exists
+        const existingUser = users.find(u => u.email === formData.email);
+        if (existingUser) {
+          toast.error('An account with this email already exists');
           return;
         }
-
-        // Create new user
-        const newUser = {
-          id: Date.now().toString(),
+        
+        const newUser: User = {
+          id: `user-${Date.now()}`,
           email: formData.email,
           password: formData.password,
-          role: formData.role,
-          name: formData.name
+          role: formData.role as User['role'],
+          name: formData.name,
+          isApproved: formData.role === 'manager' ? false : true // Managers need approval
         };
 
-        // Add new user to the users array
-        setUsers(prevUsers => [...prevUsers, newUser]);
+        console.log('Creating user in MongoDB:', newUser);
         
-        toast.success('Account created successfully! Please login.');
+        // Save to MongoDB via API
+        const createdUser = await createUser(newUser);
+        
+        console.log('User created in MongoDB:', createdUser);
+        
+        // Reload users from database
+        const updatedUsers = await getUsers();
+        setUsers(updatedUsers);
+        
+        if (formData.role === 'manager') {
+          toast.success('Manager account created! Waiting for admin approval.');
+        } else {
+          toast.success('Account created successfully! Please login.');
+        }
         setIsLogin(true);
         setFormData({ email: '', password: '', name: '', role: 'user' });
       }
@@ -146,15 +159,7 @@ const AuthForm = () => {
           {[...Array(12)].map((_, i) => (
             <div 
               key={`star-${i}`}
-              className="absolute rounded-full bg-white opacity-70 animate-star-twinkle"
-              style={{
-                width: `${Math.random() * 3 + 1}px`,
-                height: `${Math.random() * 3 + 1}px`,
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${Math.random() * 3 + 2}s`,
-              }}
+              className={`absolute rounded-full bg-white opacity-70 animate-star-twinkle star-${i % 6}`}
             />
           ))}
           
@@ -162,18 +167,7 @@ const AuthForm = () => {
           {[...Array(20)].map((_, i) => (
             <div 
               key={`dust-${i}`}
-              className="absolute rounded-full animate-float"
-              style={{
-                width: `${Math.random() * 6 + 2}px`,
-                height: `${Math.random() * 6 + 2}px`,
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                background: `hsl(${220 + Math.random() * 40}, 70%, 80%, ${0.3 + Math.random() * 0.4})`,
-                filter: 'blur(1px)',
-                boxShadow: `0 0 ${Math.random() * 5 + 2}px hsla(${220 + Math.random() * 40}, 70%, 80%, 0.8)`,
-                animationDelay: `${Math.random() * 10}s`,
-                animationDuration: `${Math.random() * 20 + 20}s`,
-              }}
+              className={`absolute rounded-full animate-float dust-${i % 10}`}
             />
           ))}
         </div>
@@ -183,8 +177,8 @@ const AuthForm = () => {
       <div className="backdrop-blur-xl bg-gradient-to-br from-nebula-950/40 via-nebula-900/50 to-nebula-800/30 border border-nebula-700/30 rounded-3xl shadow-2xl shadow-nebula-600/20 p-8 animate-fade-in overflow-hidden relative hover-lift">
         {/* Enhanced animated nebula glow effects */}
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-nebula-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-nebula-600/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/4 right-1/4 w-30 h-30 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '3s' }}></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-nebula-600/10 rounded-full blur-3xl animate-pulse-slow [animation-delay:2s]"></div>
+        <div className="absolute top-1/4 right-1/4 w-30 h-30 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow [animation-delay:3s]"></div>
         
         {/* Security indicator */}
         <div className="absolute top-4 right-4 flex items-center gap-1 text-nebula-300/70">
@@ -197,14 +191,10 @@ const AuthForm = () => {
           <div className="absolute top-0 -right-8 animate-pulse-slow opacity-80">
             <Sparkles size={16} className="text-nebula-300/70" />
           </div>
-          <div className="absolute -bottom-4 -left-10 animate-pulse-slow opacity-80" style={{ animationDelay: '2s' }}>
+          <div className="absolute -bottom-4 -left-10 animate-pulse-slow opacity-80 [animation-delay:2s]">
             <Star size={18} className="text-nebula-400/70" fill="currentColor" />
           </div>
         </div>
-        
-        <h2 className="text-2xl font-bold mb-6 text-center gradient-text">
-          {isLogin ? '' : 'Join the Nebula Network'}
-        </h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
@@ -216,7 +206,7 @@ const AuthForm = () => {
                   id="name"
                   name="name"
                   className="nebula-input w-full"
-                  placeholder="Nebula Explorer"
+                  placeholder="John Stellar"
                   value={formData.name}
                   onChange={handleChange}
                   required
@@ -278,7 +268,8 @@ const AuthForm = () => {
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent className="bg-nebula-900 border border-nebula-700/30 text-white">
-                  <SelectItem value="user" className="hover:bg-nebula-800">Nebula User</SelectItem>
+                  <SelectItem value="user" className="hover:bg-nebula-800">Nebula User (Employee)</SelectItem>
+                  <SelectItem value="manager" className="hover:bg-nebula-800">Nebula Manager (Requires Admin Approval)</SelectItem>
                   <SelectItem value="admin" className="hover:bg-nebula-800">Nebula Admin</SelectItem>
                 </SelectContent>
               </Select>
@@ -310,6 +301,13 @@ const AuthForm = () => {
             )}
           </button>
         </form>
+        
+        {/* SSO Buttons - Only show on login */}
+        {isLogin && (
+          <div className="mt-6">
+            <SSOButtons />
+          </div>
+        )}
         
         <div className="mt-6 text-center">
           <button 

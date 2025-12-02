@@ -4,6 +4,7 @@ import { CalendarIcon, Clock, Search } from 'lucide-react';
 import TaskItem from './TaskItem';
 import { Task, User } from '../../types';
 import { useToast } from '../../hooks/use-toast';
+import { getTasks, getUsers, updateTask } from '../../utils/api';
 
 interface TaskListProps {
   isAdmin: boolean;
@@ -18,64 +19,58 @@ const TaskList = ({ isAdmin, currentUserId }: TaskListProps) => {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    // Load tasks from localStorage
-    const storedTasks = localStorage.getItem('nebulaTasks');
-    if (storedTasks) {
+    // Load tasks and users from MongoDB
+    const loadData = async () => {
       try {
-        const parsedTasks = JSON.parse(storedTasks) as Task[];
+        const [allTasks, allUsers] = await Promise.all([getTasks(), getUsers()]);
         // If not admin, only show tasks assigned to the current user
-        const filteredTasks = isAdmin ? parsedTasks : parsedTasks.filter(task => task.assignedTo === currentUserId);
+        const filteredTasks = isAdmin ? allTasks : allTasks.filter(task => task.assignedTo === currentUserId);
         setTasks(filteredTasks);
-      } catch (e) {
-        console.error("Error parsing tasks:", e);
-        setTasks([]);
+        setUsers(allUsers);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({ title: "Error", description: "Failed to load tasks", variant: "destructive" });
       }
-    }
-    
-    // Load users for admin view
-    const storedUsers = localStorage.getItem('nebulaUsers');
-    if (storedUsers) {
-      try {
-        setUsers(JSON.parse(storedUsers));
-      } catch (e) {
-        console.error("Error parsing users:", e);
-        setUsers([]);
-      }
-    }
+    };
+    loadData();
   }, [isAdmin, currentUserId]);
 
-  const handleStatusChange = (taskId: string, newStatus: 'complete' | 'incomplete') => {
-    // Update task status in state
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        return { ...task, status: newStatus };
-      }
-      return task;
-    });
-    
-    setTasks(updatedTasks);
-    
-    // Update localStorage
-    const allTasks = localStorage.getItem('nebulaTasks');
-    if (allTasks) {
-      try {
-        const parsedTasks = JSON.parse(allTasks) as Task[];
-        const updatedAllTasks = parsedTasks.map(task => {
-          if (task.id === taskId) {
-            return { ...task, status: newStatus };
-          }
-          return task;
-        });
-        localStorage.setItem('nebulaTasks', JSON.stringify(updatedAllTasks));
-      } catch (e) {
-        console.error("Error updating task status:", e);
-      }
+  const handleStatusChange = async (taskId: string, newStatus: 'complete' | 'incomplete') => {
+    try {
+      // Update task status via API
+      const updateData = {
+        status: newStatus,
+        reviewStatus: newStatus === 'complete' ? 'pending_review' : undefined,
+        reviewedBy: undefined,
+        reviewComment: undefined
+      };
+      
+      await updateTask(taskId, updateData);
+      
+      // Update state
+      const updatedTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return { ...task, ...updateData };
+        }
+        return task;
+      });
+      
+      setTasks(updatedTasks);
+      
+      toast({
+        title: "Task Updated",
+        description: newStatus === 'complete' 
+          ? 'Task marked as complete and sent for manager review' 
+          : `Task status changed to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update task status",
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: "Task updated",
-      description: `Task status changed to ${newStatus}`,
-    });
   };
 
   const getFilteredTasks = () => {

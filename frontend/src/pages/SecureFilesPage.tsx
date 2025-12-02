@@ -4,14 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import FileUpload from '../components/auth/FileUpload';
 import EncryptionInfo from '../components/auth/EncryptionInfo';
-import { FileIcon, LockIcon, Eye, Download, Shield, KeyRound } from 'lucide-react';
+import { FileIcon, LockIcon, Eye, Download, Shield, KeyRound, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { User, File } from '../types';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
-import { connectToDatabase } from '../utils/mongodb';
+import { Badge } from "../components/ui/badge";
 import { Button } from '../components/ui/button';
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { getFiles, createFile } from '../utils/api';
 
 // Use our File type as the FileInfo interface
 type FileInfo = File;
@@ -53,48 +54,30 @@ const SecureFilesPage = () => {
 
   const loadFiles = async (user: User) => {
     try {
-      // Get all files from localStorage as a fallback
-      const storedFiles = localStorage.getItem('nebulaFiles');
-      let allStoredFiles: FileInfo[] = storedFiles ? JSON.parse(storedFiles) : [];
+      // Get all files from API
+      const allFilesFromDB = await getFiles();
       
-      // Try to connect to the database
-      try {
-        const { db } = await connectToDatabase();
-        const filesCollection = db.collection('files');
-        
-        // If admin, get all files
-        if (user.role === 'admin') {
-          const files = await filesCollection.find().toArray();
-          // If files exist in the database, use them; otherwise use localStorage
-          if (files && files.length > 0) {
-            setAllFiles(files as unknown as FileInfo[]);
-          } else {
-            setAllFiles(allStoredFiles);
-          }
-        } else {
-          setAllFiles(allStoredFiles);
-        }
-        
-        // Get files for the current user
-        const userOwnedFiles = await filesCollection.find({ uploadedBy: user.id }).toArray();
-        if (userOwnedFiles && userOwnedFiles.length > 0) {
-          setUserFiles(userOwnedFiles as unknown as FileInfo[]);
-        } else {
-          // Fallback to localStorage for user's files
-          const userLocalFiles = allStoredFiles.filter(file => file.uploadedBy === user.id);
-          setUserFiles(userLocalFiles);
-        }
-      } catch (dbError) {
-        console.error("Failed to load from MongoDB, falling back to localStorage", dbError);
-        
-        // Fallback to localStorage
-        if (user.role === 'admin') {
-          setAllFiles(allStoredFiles);
-        }
-        
-        // Get files for the current user from localStorage
-        const userOwnedFiles = allStoredFiles.filter(file => file.uploadedBy === user.id);
-        setUserFiles(userOwnedFiles);
+      // Get files uploaded by current user
+      const userOwnedFiles = allFilesFromDB.filter(file => file.uploadedBy === user.id);
+      setUserFiles(userOwnedFiles);
+      
+      // Set files visible to this user based on role
+      if (user.role === 'admin') {
+        // Admin sees all files from managers and users
+        setAllFiles(allFilesFromDB);
+      } else if (user.role === 'manager') {
+        // Manager sees files from regular users (not from other managers/admins)
+        const userFiles = allFilesFromDB.filter(file => {
+          // Find the user who uploaded this file
+          const storedUsers = localStorage.getItem('nebulaUsers');
+          const users = storedUsers ? JSON.parse(storedUsers) as User[] : [];
+          const fileOwner = users.find(u => u.id === file.uploadedBy);
+          return fileOwner && fileOwner.role === 'user';
+        });
+        setAllFiles(userFiles);
+      } else {
+        // Regular users don't see other users' files
+        setAllFiles([]);
       }
     } catch (error) {
       toast.error("Error loading files");
@@ -105,43 +88,29 @@ const SecureFilesPage = () => {
   const handleFileUploaded = async (fileInfo: FileInfo) => {
     if (!userData) return;
     
-    // Add user information to file
+    // Add user information to file and set pending review status
     const fileWithUserInfo: FileInfo = {
       ...fileInfo,
       uploadedBy: userData.id,
       uploadedAt: new Date().toISOString(),
+      reviewStatus: 'pending_review', // Set for manager/admin review
     };
     
     try {
-      // Always update localStorage first to ensure persistence
-      const storedFiles = localStorage.getItem('nebulaFiles');
-      let files = storedFiles ? JSON.parse(storedFiles) as FileInfo[] : [];
-      files = [...files, fileWithUserInfo];
-      localStorage.setItem('nebulaFiles', JSON.stringify(files));
+      // Save to MongoDB via API
+      const savedFile = await createFile(fileWithUserInfo);
       
-      // Try to save to MongoDB
-      try {
-        const { db } = await connectToDatabase();
-        const filesCollection = db.collection('files');
-        
-        // Convert to a plain object and remove any _id field for a new document
-        const fileDocument = { ...fileWithUserInfo };
-        if (fileDocument._id === undefined) {
-          delete fileDocument._id;
-        }
-        
-        await filesCollection.insertOne(fileDocument);
-        toast.success("File saved to database");
-      } catch (dbError) {
-        console.error("Failed to save to MongoDB, using localStorage only", dbError);
-        toast.warning("File saved locally (database connection failed)");
+      // Show appropriate success message based on role
+      if (userData.role === 'user') {
+        toast.success("File uploaded and sent for manager review");
+      } else if (userData.role === 'manager') {
+        toast.success("File uploaded and sent for admin review");
+      } else {
+        toast.success("File uploaded successfully");
       }
       
-      // Update state
-      setUserFiles([...userFiles, fileWithUserInfo]);
-      if (userData.role === 'admin') {
-        setAllFiles([...allFiles, fileWithUserInfo]);
-      }
+      // Reload files to get fresh data
+      await loadFiles(userData);
     } catch (error) {
       toast.error("Error saving file");
       console.error("Error saving file:", error);
@@ -260,15 +229,15 @@ const SecureFilesPage = () => {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* File Upload Section - Only for non-admin users */}
-          {!isAdmin && (
+          {/* File Upload Section - For users and managers */}
+          {userData.role !== 'admin' && (
             <div className="lg:col-span-1">
               <FileUpload onFileUploaded={handleFileUploaded} />
             </div>
           )}
           
           {/* File List Section */}
-          <div className={isAdmin ? "lg:col-span-3" : "lg:col-span-2"}>
+          <div className={userData.role === 'admin' ? "lg:col-span-3" : "lg:col-span-2"}>  
             <div className="nebula-card mb-6">
               <div className="p-6 border-b border-border/30">
                 <h2 className="text-xl font-bold">Your Encrypted Files</h2>
@@ -295,9 +264,30 @@ const SecureFilesPage = () => {
                             {file.encryptionDetails?.passwordProtected && (
                               <KeyRound size={14} className="text-amber-400" />
                             )}
+                            {file.reviewStatus === 'reverted' && (
+                              <Badge className="bg-red-500/20 text-red-500 border-red-500/30 text-xs">
+                                <AlertCircle size={10} className="mr-1" />
+                                Reverted
+                              </Badge>
+                            )}
+                            {file.reviewStatus === 'approved' && (
+                              <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-xs">
+                                <CheckCircle2 size={10} className="mr-1" />
+                                Approved
+                              </Badge>
+                            )}
+                            {file.reviewStatus === 'pending_review' && (
+                              <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-xs">
+                                <Clock size={10} className="mr-1" />
+                                Pending Review
+                              </Badge>
+                            )}
                           </h3>
                           {file.description && (
                             <p className="text-sm text-nebula-400 mb-2 italic">"{file.description}"</p>
+                          )}
+                          {file.reviewStatus === 'reverted' && file.reviewComment && (
+                            <p className="text-sm text-red-400 mb-2 italic">Manager: {file.reviewComment}</p>
                           )}
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-nebula-400">
                             <div className="flex items-center gap-1">
@@ -335,12 +325,14 @@ const SecureFilesPage = () => {
               </div>
             </div>
             
-            {/* Admin Only Section */}
-            {isAdmin && (
+            {/* Manager/Admin Section - Files from others */}
+            {(userData.role === 'manager' || userData.role === 'admin') && allFiles.length > 0 && (
               <div className="nebula-card">
                 <div className="p-6 border-b border-border/30 flex items-center gap-2">
                   <Shield size={18} className="text-amber-400" />
-                  <h2 className="text-xl font-bold">All User Files (Admin View)</h2>
+                  <h2 className="text-xl font-bold">
+                    {userData.role === 'admin' ? 'All User Files (Admin View)' : 'User Files for Review (Manager View)'}
+                  </h2>
                 </div>
                 
                 <div className="divide-y divide-border/30">

@@ -33,6 +33,15 @@ export const getUsers = async (): Promise<User[]> => {
   }
 };
 
+export const login = async (email: string, password: string): Promise<User> => {
+  try {
+    const response = await api.post('/login', { email, password });
+    return response.data.user;
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
 export const getUserById = async (id: string): Promise<User> => {
   try {
     const response = await api.get(`/users/${id}`);
@@ -118,6 +127,14 @@ export const createFile = async (file: File): Promise<File> => {
 export const deleteFile = async (id: string): Promise<void> => {
   try {
     await api.delete(`/files/${id}`);
+  } catch (error) {
+    return handleApiError(error);
+  }
+};
+
+export const reviewFile = async (id: string, reviewStatus: string, reviewedBy: string, reviewComment?: string): Promise<void> => {
+  try {
+    await api.put(`/files/${id}/review`, { reviewStatus, reviewedBy, reviewComment });
   } catch (error) {
     return handleApiError(error);
   }
