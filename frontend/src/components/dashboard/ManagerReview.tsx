@@ -14,7 +14,7 @@ type ManagerReviewProps = {
   managerName: string;
 };
 
-const ManagerReview: React.FC<ManagerReviewProps> = ({ managerId, managerName }) => {
+const ManagerReview: React.FC<ManagerReviewProps> = ({ managerId }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [reviewComment, setReviewComment] = useState<{ [key: string]: string }>({});
