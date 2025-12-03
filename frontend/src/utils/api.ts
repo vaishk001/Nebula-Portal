@@ -3,7 +3,8 @@ import axios from 'axios';
 import { User, Task, File } from '../types';
 import { toast } from 'sonner';
 
-const API_URL = '/api';
+// Use Render backend URL in production, local in development
+const API_URL = import.meta.env.VITE_API_URL || 'https://nebula-portal.onrender.com/api';
 
 // Create axios instance for API requests
 const api = axios.create({
