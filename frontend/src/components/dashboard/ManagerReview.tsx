@@ -6,7 +6,7 @@ import { Badge } from "../ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
-import { Task, File, User } from '../../types';
+import { Task, File } from '../../types';
 import { getTasks, getFiles, getUsers, updateTask, reviewFile } from '../../utils/api';
 
 type ManagerReviewProps = {
