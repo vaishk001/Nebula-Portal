@@ -28,12 +28,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nebula';
-const clientOptions = {
-  tls: true,
-  tlsAllowInvalidCertificates: false,
-  serverSelectionTimeoutMS: 30000,
-  connectTimeoutMS: 30000,
-};
+
+// Only add TLS options for mongodb+srv URIs
+const clientOptions = uri.includes('mongodb+srv') 
+  ? {
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+    }
+  : {};
+
 const client = new MongoClient(uri, clientOptions);
 let cachedDb = null;
 
