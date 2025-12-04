@@ -171,7 +171,7 @@ const CompletedPage = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Active Users</p>
                 <p className="text-2xl font-bold">
-                  {new Set(completedTasks.map(task => task.assignedTo)).size}
+                  {new Set((Array.isArray(completedTasks) ? completedTasks : []).map(task => task.assignedTo)).size}
                 </p>
               </div>
             </div>
@@ -198,7 +198,7 @@ const CompletedPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {completedTasks.map((task) => (
+                {(Array.isArray(completedTasks) ? completedTasks : []).map((task) => (
                   <div key={task.id} className="group">
                     <Card className="p-4 bg-background/50 border-border/50 hover:border-green-500/30 transition-all">
                       <div className="flex items-start justify-between gap-4">

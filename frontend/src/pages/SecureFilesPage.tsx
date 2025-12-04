@@ -252,7 +252,7 @@ const SecureFilesPage = () => {
                     No files uploaded yet
                   </div>
                 ) : (
-                  userFiles.map((file, index) => (
+                  (Array.isArray(userFiles) ? userFiles : []).map((file, index) => (
                     <div key={index} className="p-4 hover:bg-secondary/20 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="bg-nebula-800/50 p-3 rounded-lg">
@@ -341,7 +341,7 @@ const SecureFilesPage = () => {
                       No files have been uploaded by any users
                     </div>
                   ) : (
-                    allFiles.map((file, index) => {
+                    (Array.isArray(allFiles) ? allFiles : []).map((file, index) => {
                       // Find user info for the file
                       const users = JSON.parse(localStorage.getItem('nebulaUsers') || '[]') as User[];
                       const fileUser = users.find(user => user.id === file.uploadedBy);

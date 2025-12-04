@@ -193,7 +193,7 @@ const TaskForm = () => {
                 disabled={formData.assignToAll}
               >
                 <option value="">Select User</option>
-                {users.map(user => (
+                {(Array.isArray(users) ? users : []).map(user => (
                   <option key={user.id} value={user.id}>
                     {user.name} ({user.email})
                   </option>

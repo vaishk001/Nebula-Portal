@@ -48,7 +48,7 @@ const TaskList = ({ isAdmin, currentUserId }: TaskListProps) => {
       await updateTask(taskId, updateData);
       
       // Update state
-      const updatedTasks = tasks.map(task => {
+      const updatedTasks = (Array.isArray(tasks) ? tasks : []).map(task => {
         if (task.id === taskId) {
           return { ...task, ...updateData };
         }
@@ -151,7 +151,7 @@ const TaskList = ({ isAdmin, currentUserId }: TaskListProps) => {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredTasks.map(task => (
+          {(Array.isArray(filteredTasks) ? filteredTasks : []).map(task => (
             <TaskItem
               key={task.id}
               task={task}
