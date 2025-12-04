@@ -7,22 +7,12 @@ import {
 } from 'lucide-react';
 import NebulaBranding from '../NebulaBranding';
 import StarBackground from '../StarBackground';
-import ThemeToggle from '../ThemeToggle';
 import { Card } from "../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { 
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "../ui/navigation-menu";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "../ui/dialog";
 import UserProfile from '../dashboard/UserProfile';
 import { User } from '../../types';
-import { handleSSOLogout } from '../../utils/sso';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -67,7 +57,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [navigate]);
 
   const handleLogout = () => {
-    handleSSOLogout(); // This clears both SSO session and nebulaUser
+    localStorage.removeItem('nebulaUser');
     navigate('/');
   };
 
@@ -130,28 +120,25 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </div>
             
             <div className="hidden lg:flex items-center justify-center flex-1">
-              <NavigationMenu className="mx-auto">
-                <NavigationMenuList className="flex space-x-2">
-                  {menuItems.map(item => (
-                    <NavigationMenuItem key={item.key}>
-                      <NavigationMenuLink
-                        href={item.path}
-                        className={
-                          activeMenu === item.key
-                            ? "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-nebula-600/20 text-nebula-300 hover:bg-nebula-600/30 transition-all"
-                            : "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full hover:bg-nebula-600/10 transition-all"
-                        }
-                        onClick={() => setActiveMenu(item.key)}
-                      >
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-nebula-950 shadow-inner shadow-nebula-500/20">
-                          {item.icon}
-                        </div>
-                        <span>{item.label}</span>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  ))}
-                </NavigationMenuList>
-              </NavigationMenu>
+              <nav className="flex space-x-2">
+                {menuItems.map(item => (
+                  <a
+                    key={item.key}
+                    href={item.path}
+                    className={
+                      activeMenu === item.key
+                        ? "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-nebula-600/20 text-nebula-300 hover:bg-nebula-600/30 transition-all"
+                        : "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full hover:bg-nebula-600/10 transition-all"
+                    }
+                    onClick={() => setActiveMenu(item.key)}
+                  >
+                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-nebula-950 shadow-inner shadow-nebula-500/20">
+                      {item.icon}
+                    </div>
+                    <span>{item.label}</span>
+                  </a>
+                ))}
+              </nav>
             </div>
             
             <div className="flex lg:hidden">
@@ -193,53 +180,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </div>
               )}
               
-              <ThemeToggle />
-              
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="flex items-center gap-2 h-9 bg-transparent">
-                      <Avatar className="h-8 w-8 border border-border/50">
-                        <AvatarImage src={`https://avatar.vercel.sh/${userData.id}.png`} />
-                        <AvatarFallback className="bg-nebula-600 text-white">{getInitials(userData.name)}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium hidden sm:block">
-                        {userData.name}
-                      </span>
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="w-60 p-3">
-                        <div className="mb-2 mt-1 px-2 text-xs font-semibold text-muted-foreground">
-                          Signed in as <span className="text-foreground font-bold">{userData.email}</span>
-                        </div>
-                        <div className="mt-3">
-                          <button
-                            onClick={() => setShowProfile(true)}
-                            className="w-full px-2 py-1.5 rounded-md hover:bg-secondary/80 text-sm flex items-center gap-2 text-left"
-                          >
-                            <UserIcon size={15} />
-                            <span>Profile</span>
-                          </button>
-                          <button
-                            onClick={() => navigate('/dashboard/tasks')}
-                            className="w-full px-2 py-1.5 rounded-md hover:bg-secondary/80 text-sm flex items-center gap-2 text-left"
-                          >
-                            <ClipboardList size={15} />
-                            <span>Tasks</span>
-                          </button>
-                          <button 
-                            onClick={handleLogout}
-                            className="w-full mt-2 px-2 py-1.5 rounded-md hover:bg-destructive/20 hover:text-destructive text-sm flex items-center gap-2 text-left"
-                          >
-                            <LogOut size={15} />
-                            <span>Sign out</span>
-                          </button>
-                        </div>
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 h-9"
+                  onClick={() => setShowProfile(true)}
+                >
+                  <Avatar className="h-8 w-8 border border-border/50">
+                    <AvatarImage src={`https://avatar.vercel.sh/${userData.id}.png`} />
+                    <AvatarFallback className="bg-nebula-600 text-white">{getInitials(userData.name)}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium hidden sm:block">
+                    {userData.name}
+                  </span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -253,8 +208,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="flex items-center justify-between px-4 py-5 border-b border-border/30">
             <NebulaBranding size="small" />
             <button 
-              onClick={() => setMobileMenuOpen(false)}
+                onClick={() => setMobileMenuOpen(false)}
               className="p-1 rounded-full hover:bg-sidebar-accent"
+              title="Close menu"
             >
               <X size={20} className="text-sidebar-foreground" />
             </button>
@@ -331,6 +287,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <button 
           onClick={() => navigate('/dashboard')}
           className="w-14 h-14 rounded-full bg-nebula-600 text-white flex items-center justify-center shadow-lg shadow-nebula-600/20 hover:shadow-nebula-600/40 transition-all"
+          title="Go to Dashboard"
         >
           <LayoutDashboard size={24} />
         </button>

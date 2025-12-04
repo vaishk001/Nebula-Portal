@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar, Clock, Edit, MoreHorizontal, Trash, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -40,11 +39,7 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
   const saveEdit = () => {
     // Validate form
     if (!editedTask.title || !editedTask.description) {
-      toast({
-        title: "Validation Error",
-        description: "Title and description are required",
-        variant: "destructive"
-      });
+      toast.error("Title and description are required");
       return;
     }
     
@@ -62,20 +57,13 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
         
         localStorage.setItem('nebulaTasks', JSON.stringify(updatedTasks));
         
-        toast({
-          title: "Task Updated",
-          description: "The task has been updated successfully"
-        });
+        toast.success("Task updated successfully");
         
         // Reload the page to reflect changes
         window.location.reload();
       } catch (e) {
         console.error("Error updating task:", e);
-        toast({
-          title: "Update Failed",
-          description: "There was an error updating the task",
-          variant: "destructive"
-        });
+        toast.error("Error updating task");
       }
     }
     
@@ -94,20 +82,13 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
         
         localStorage.setItem('nebulaTasks', JSON.stringify(updatedTasks));
         
-        toast({
-          title: "Task Deleted",
-          description: "The task has been deleted successfully"
-        });
+        toast.success("Task deleted successfully");
         
         // Reload the page to reflect changes
         window.location.reload();
       } catch (e) {
         console.error("Error deleting task:", e);
-        toast({
-          title: "Delete Failed",
-          description: "There was an error deleting the task",
-          variant: "destructive"
-        });
+        toast.error("Error deleting task");
       }
     }
   };
@@ -131,7 +112,6 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
                 onChange={handleEditChange}
                 className="nebula-input w-full"
                 placeholder="Enter task title"
-                title="Task title"
                 required
                 aria-required="true"
               />
@@ -147,7 +127,6 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
                 onChange={handleEditChange}
                 className="nebula-input w-full"
                 placeholder="Enter a brief description"
-                title="Task description"
                 required
                 aria-required="true"
               />
@@ -162,7 +141,6 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
                 onChange={handleEditChange}
                 className="nebula-input w-full min-h-[100px]"
                 placeholder="Add more detailed information"
-                title="Detailed task description"
               />
             </div>
             
@@ -217,18 +195,20 @@ const TaskItem = ({ task, isAdmin, assigneeName, onStatusChange }: TaskItemProps
                     <button 
                       className="p-1 rounded-full hover:bg-secondary/70"
                       onClick={() => setIsEditing(true)}
+                      title="Edit task"
                     >
                       <Edit size={16} className="text-muted-foreground" />
                     </button>
                     <button 
                       className="p-1 rounded-full hover:bg-secondary/70"
                       onClick={deleteTask}
+                      title="Delete task"
                     >
                       <Trash size={16} className="text-muted-foreground" />
                     </button>
                   </>
                 )}
-                <button className="p-1 rounded-full hover:bg-secondary/70">
+                <button className="p-1 rounded-full hover:bg-secondary/70" title="More options">
                   <MoreHorizontal size={16} className="text-muted-foreground" />
                 </button>
               </div>
