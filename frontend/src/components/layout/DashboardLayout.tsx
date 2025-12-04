@@ -121,7 +121,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             
             <div className="hidden lg:flex items-center justify-center flex-1">
               <nav className="flex space-x-2">
-                {menuItems.map(item => (
+                    {(Array.isArray(menuItems) ? menuItems : []).map(item => (
                   <a
                     key={item.key}
                     href={item.path}

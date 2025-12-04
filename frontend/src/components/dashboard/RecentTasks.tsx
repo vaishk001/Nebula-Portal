@@ -47,7 +47,7 @@ const RecentTasks = ({ isAdmin, currentUserId }: RecentTasksProps) => {
         </div>
       ) : (
         <div className="divide-y divide-border/30">
-          {tasks.map((task) => (
+            {(Array.isArray(tasks) ? tasks : []).map((task) => (
             <div key={task.id} className="p-4 hover:bg-secondary/20 transition-colors">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-medium">{task.title}</h3>

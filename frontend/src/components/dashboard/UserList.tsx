@@ -36,7 +36,7 @@ const UserList = () => {
 
   return (
     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-      {users.map(user => (
+      {(Array.isArray(users) ? users : []).map(user => (
         <div key={user.id} className="flex items-center p-3 rounded-md bg-secondary/20 hover:bg-secondary/40 transition-colors">
           <div className="w-8 h-8 bg-nebula-600/20 text-nebula-500 rounded-full flex items-center justify-center mr-3">
             {user.role === 'manager' ? <Shield size={16} /> : <UserIcon size={16} />}

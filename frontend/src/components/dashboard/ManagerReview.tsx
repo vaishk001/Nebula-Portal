@@ -139,7 +139,7 @@ const ManagerReview: React.FC<ManagerReviewProps> = ({ managerId }) => {
                 <p>No tasks pending review</p>
               </div>
             ) : (
-              tasks.map(task => (
+              (Array.isArray(tasks) ? tasks : []).map(task => (
                 <Card key={task.id} className="border-border/30 bg-secondary/20">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -199,7 +199,7 @@ const ManagerReview: React.FC<ManagerReviewProps> = ({ managerId }) => {
                 <p>No files pending review</p>
               </div>
             ) : (
-              files.map(file => (
+              (Array.isArray(files) ? files : []).map(file => (
                 <Card key={file._id} className="border-border/30 bg-secondary/20">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
