@@ -28,9 +28,11 @@ const handleApiError = (error: any) => {
 export const getUsers = async (): Promise<User[]> => {
   try {
     const response = await api.get('/users');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    return handleApiError(error);
+    console.warn('getUsers failed, returning []');
+    handleApiError(error);
+    return [];
   }
 };
 
@@ -65,9 +67,11 @@ export const createUser = async (user: User): Promise<User> => {
 export const getTasks = async (): Promise<Task[]> => {
   try {
     const response = await api.get('/tasks');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    return handleApiError(error);
+    console.warn('getTasks failed, returning []');
+    handleApiError(error);
+    return [];
   }
 };
 
@@ -101,9 +105,11 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<void>
 export const getFiles = async (): Promise<File[]> => {
   try {
     const response = await api.get('/files');
-    return response.data;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    return handleApiError(error);
+    console.warn('getFiles failed, returning []');
+    handleApiError(error);
+    return [];
   }
 };
 
