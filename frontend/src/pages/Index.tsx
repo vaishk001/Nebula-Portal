@@ -3,33 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthForm from '../components/auth/AuthForm';
 import StarBackground from '../components/StarBackground';
-// Inline fallback for ThemeToggle to avoid missing module during compilation.
-// Replace with separate '../components/ThemeToggle' file if you add it later.
-const ThemeToggle: React.FC = () => {
-  const [dark, setDark] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return document.documentElement.classList.contains('dark');
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (dark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [dark]);
-
-  return (
-    <button
-      aria-label="Toggle theme"
-      onClick={() => setDark((d) => !d)}
-      className="p-2 rounded bg-white/10 hover:bg-white/20 text-sm"
-    >
-      {dark ? '🌙' : '🌞'}
-    </button>
-  );
-};
 import { Rocket, Globe, Satellite, Zap } from 'lucide-react';
 
 // Fallback implementation for SSO session check when `../utils/sso` is missing.
@@ -89,11 +62,6 @@ const Index = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-nebula-500/5 rounded-full blur-3xl animate-pulse-slow"></div>
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-pulse-slow [animation-delay:2s]"></div>
         <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl animate-pulse-slow [animation-delay:4s]"></div>
-      </div>
-      
-      {/* Theme toggle in top-right corner */}
-      <div className="absolute top-4 right-4 z-20">
-        <ThemeToggle />
       </div>
       
       {/* Welcome Message */}
