@@ -18,7 +18,8 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:5174', 
     'https://nebula-portal-two.vercel.app',
-    'https://nebula-portal.vercel.app'
+    'https://nebula-portal.vercel.app',
+    'https://nebula-portal-1qty.vercel.app'
   ],
   credentials: true
 }));
