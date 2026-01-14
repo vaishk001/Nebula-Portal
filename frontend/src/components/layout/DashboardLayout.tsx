@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ClipboardList, LogOut, 
   Bell, Menu, X, ChevronRight, User as UserIcon, LayoutDashboard, FileIcon,
-  CheckCircle
+  CheckCircle, ChevronDown, Settings
 } from 'lucide-react';
 import NebulaBranding from '../NebulaBranding';
 import StarBackground from '../StarBackground';
@@ -11,6 +11,13 @@ import { Card } from "../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "../ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import UserProfile from '../dashboard/UserProfile';
 import { User } from '../../types';
 
@@ -181,19 +188,39 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               )}
               
               <div className="relative">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 h-9"
-                  onClick={() => setShowProfile(true)}
-                >
-                  <Avatar className="h-8 w-8 border border-border/50">
-                    <AvatarImage src={`https://avatar.vercel.sh/${userData.id}.png`} />
-                    <AvatarFallback className="bg-nebula-600 text-white">{getInitials(userData.name)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium hidden sm:block">
-                    {userData.name}
-                  </span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2 h-9"
+                    >
+                      <Avatar className="h-8 w-8 border border-border/50">
+                        <AvatarImage src={`https://avatar.vercel.sh/${userData.id}.png`} />
+                        <AvatarFallback className="bg-nebula-600 text-white">{getInitials(userData.name)}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium hidden sm:block">
+                        {userData.name}
+                      </span>
+                      <ChevronDown size={16} className="text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{userData.name}</p>
+                      <p className="text-xs text-muted-foreground">{userData.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowProfile(true)}>
+                      <Settings size={16} className="mr-2" />
+                      Edit Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                      <LogOut size={16} className="mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
